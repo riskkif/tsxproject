@@ -46,8 +46,8 @@ function App() {
   return (
     <>
      <Routes>
-        <Route path="/loginadmin" element={<LoginAdmin />} />
-        <Route path="/registeradmin" element={<RegisterAdmin />} />
+        <Route path="/loginadmin" element={<><LoginAdmin /> <PageTitle title="Login" /></>} />
+        <Route path="/registeradmin" element={<><RegisterAdmin /> <PageTitle title="Register" /></>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboarduser" element={<UserViewPage />} />
@@ -59,7 +59,7 @@ function App() {
           index
           element={
             <>
-              <PageTitle title="eCommerce Dashboard | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+              <PageTitle title="Dashboard" />
               <ECommerce />
             </>
           }
@@ -86,7 +86,7 @@ function App() {
           path="/profile"
           element={
             <>
-              <PageTitle title="Profile | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+              <PageTitle title="Profile" />
               <Profile />
             </>
           }
@@ -122,7 +122,7 @@ function App() {
           path="/settings"
           element={
             <>
-              <PageTitle title="Settings | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+              <PageTitle title="Settings" />
               <Settings />
             </>
           }

@@ -6,6 +6,8 @@ import ChartTwo from '../../components/Charts/ChartTwo';
 import ChatCard from '../../components/Chat/ChatCard';
 import MapOne from '../../components/Maps/MapOne';
 import TableOne from '../../components/Tables/TableOne';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 interface DataDosen {
   id: number;
@@ -49,10 +51,27 @@ const ECommerce: React.FC = () => {
   const [adminData, setAdminData] = useState<DataAdmin[]>([]);
   const [userData, setUserData] = useState<DataUser[]>([]);
   const [mhsData, setMhsData] = useState<DataMhs[]>([]);
+  const navigate = useNavigate()
+  const showToast = (icon: 'success' | 'error', title: string) => {
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      icon,
+      title,
+    });
+  };
 
   const fetchData = async () => {
     try {
       const token = sessionStorage.getItem('access_token');
+      if (!token) {
+        showToast('error', 'Silahkan login terlebih dahulu');
+        navigate('/loginadmin');
+        return;
+      }
       const [dosenResponse, adminResponse, userResponse, mhsResponse] = await Promise.all([
         fetch('https://stag-be.bisa.ai/api/app-admin/dosens', {
           method: 'GET',
@@ -239,10 +258,6 @@ const ECommerce: React.FC = () => {
             totalMhs={mhsData.length} 
             />
         <ChartTwo />
-        <div className="col-span-12 xl:col-span-8">
-          <TableOne />
-        </div>
-        <ChatCard />
       </div>
     </>
   );

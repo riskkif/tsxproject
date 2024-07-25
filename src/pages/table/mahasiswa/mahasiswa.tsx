@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import Swal from "sweetalert2";
-
+import { useNavigate } from "react-router-dom";
 
 interface Data {
   id: number;
@@ -11,21 +11,38 @@ interface Data {
   dosen_satu: string;
   dosen_dua: string;
 }
+interface DataDosen {
+  id: number;
+  nama: string;
+  nidn: string;
+  phone: string;
+  alamat: string;
+}
+
+interface Dosen {
+  alamat: string;
+  id: number;
+  nama: string;
+  nidn: string;
+  phone: string;
+}
 
 const MahasiswaPage = () => {
+  const [dosenData, setDosenData] = useState<DataDosen[]>([]);
   const [userData, setUserData] = useState<Data[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalUpdate, setModalUpdate] = useState(false);
+  const [modalDetails, setModalDetails] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [newUser, setNewUser] = useState<Omit<Data, 'id'>>({ nama: '', nim: '', phone: '', alamat: '', dosen_satu: '', dosen_dua: ''  });
   const [error, setError] = useState<string | null>(null);
   const [newUpdateUser, setNewUpdateUser] = useState<Omit<Data, 'id'>>({ nama: '', nim: '', phone: '', alamat: '', dosen_satu: '', dosen_dua: ''  });
+  const navigate = useNavigate()
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement> | React.ChangeEvent<HTMLInputElement>) => {
     setNewUser((prev) => ({
       ...prev,
-      [name]: value,
+      [e.target.name]: e.target.value,
     }));
   };
 
@@ -48,28 +65,89 @@ const MahasiswaPage = () => {
     });
   };
 
+  // const fetchData = async () => {
+  //   try {
+  //     const token = sessionStorage.getItem('access_token');
+  //     const response = await fetch('https://stag-be.bisa.ai/api/app-admin/mahasiswa', {
+  //       method: 'GET',
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error('Gagal mengambil data dosen');
+  //     }
+
+  //     const jsonResponse = await response.json();
+  //     const data = jsonResponse.data;
+
+  //     if (Array.isArray(data)) {
+  //       setUserData(data);
+  //     } else {
+  //       throw new Error('Data is not an array');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching data:', error);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchData();
+  // }, []);
+
   const fetchData = async () => {
     try {
       const token = sessionStorage.getItem('access_token');
-      const response = await fetch('https://stag-be.bisa.ai/api/app-admin/mahasiswa', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      if (!token) {
+        showToast('error', 'Silahkan login terlebih dahulu');
+        navigate('/loginadmin');
+        return;
+      }
+      const [dosenResponse, userResponse] = await Promise.all([
+        fetch('https://stag-be.bisa.ai/api/app-admin/dosens', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+        fetch('https://stag-be.bisa.ai/api/app-admin/mahasiswa', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+      ]);
 
-      if (!response.ok) {
+      if (!dosenResponse.ok) {
         throw new Error('Gagal mengambil data dosen');
       }
 
-      const jsonResponse = await response.json();
-      const data = jsonResponse.data;
-
-      if (Array.isArray(data)) {
-        setUserData(data);
-      } else {
-        throw new Error('Data is not an array');
+      if (!userResponse.ok) {
+        throw new Error('Gagal mengambil data user');
       }
+
+      const dosenJsonResponse = await dosenResponse.json();
+
+      const userJsonResponse = await userResponse.json();
+
+      const dosenData = dosenJsonResponse.data;
+
+      const userData = userJsonResponse.data;
+
+
+      if (Array.isArray(dosenData)) {
+        setDosenData(dosenData);
+      } else {
+        throw new Error('Data dosen is not an array');
+      }
+
+      if (Array.isArray(userData)) {
+        setUserData(userData);
+      } else {
+        throw new Error('Data user is not an array');
+      }
+
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -99,7 +177,7 @@ const MahasiswaPage = () => {
 
       const newUserData = await response.json();
       setUserData((prev) => [...prev, newUserData.data]);
-      showToast('success', 'Dosen added successfully!');
+      showToast('success', 'Mahasiswa added successfully!');
       fetchData(); // Fetch the data again to ensure it is up-to-date
     } catch (error) {
       console.error('Error adding user:', error);
@@ -111,6 +189,8 @@ const MahasiswaPage = () => {
     setSelectedUserId(id);
     setModalUpdate(true);
   };
+
+  
 
   const deleteUser = async (id: number) => {
     try {
@@ -127,12 +207,64 @@ const MahasiswaPage = () => {
       }
 
       setUserData((prev) => prev.filter((user) => user.id !== id));
-      showToast('success', 'Dosen Berhasil Dihapus!');
+      showToast('success', 'Mahasiswa Berhasil Dihapus!');
     } catch (error) {
       console.error('Error deleting user:', error);
-      showToast('error', 'Hapus Dosen Tidak Berhasil!');
+      showToast('error', 'Hapus Mahasiswa Tidak Berhasil!');
     }
   };
+
+  
+  // interface Mahasiswa {
+  //   alamat: string;
+  //   id: number;
+  //   nama: string;
+  //   nim: string;
+  //   phone: string;
+  //   data_Mahasiswa_satu: Dosen;
+  //   data_dosen_dua: Dosen;
+  // }
+
+  const [selectedDosenSatu, setSelectedDosenSatu] = useState<Dosen | null>(null);
+  const [selectedDosenDua, setSelectedDosenDua] = useState<Dosen | null>(null);
+ 
+  
+  
+  const getDosen = async (id: number): Promise<{ dosenSatu: Dosen | null, dosenDua: Dosen | null }> => {
+    try {
+      const token = sessionStorage.getItem('access_token');
+      const response = await fetch(`https://stag-be.bisa.ai/api/app-admin/mahasiswa/${id}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const jsonResponse = await response.json();
+      const { data } = jsonResponse;
+      console.log(data);
+      return {
+        dosenSatu: data.data_dosen_satu || null,
+        dosenDua: data.data_dosen_dua || null
+      };
+    } catch (error) {
+      console.error('Error fetching dosen:', error);
+      return { dosenSatu: null, dosenDua: null };
+    }
+  };
+
+  const handleDetails = async (id: number) => {
+    const { dosenSatu, dosenDua } = await getDosen(id);
+    setSelectedDosenSatu(dosenSatu);
+    setSelectedDosenDua(dosenDua);
+    setSelectedUserId(id);
+    setModalDetails(true);
+  };
+  
 
 
   const handleUpdateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,16 +294,16 @@ const MahasiswaPage = () => {
       });
   
       if (!response.ok) {
-        showToast('error', 'Perbarui profil gagal!');
+        showToast('error', 'Perbarui mahasiswa gagal!');
         return;
       }
   
       fetchData();
       setModalUpdate(false);
-      showToast('success', 'Perbarui profil berhasil!');
+      showToast('success', 'Perbarui mahasiswa berhasil!');
     } catch (error) {
       console.error('Error updating user:', error);
-      showToast('error', 'Perbarui profil gagal!');
+      showToast('error', 'Perbarui mahasiswa gagal!');
     }
   };
   
@@ -252,7 +384,8 @@ const MahasiswaPage = () => {
             </div>
             <div className="col-span-1 flex items-center">
               <div className="flex items-center space-x-5">
-              <button className="hover:text-primary">
+              <button className="hover:text-primary"
+                      onClick={() => handleDetails(data.id)}>
                       <svg
                         className="fill-current"
                         width="18"
@@ -328,7 +461,7 @@ const MahasiswaPage = () => {
       </div>
 
       {modalOpen && (
-        <div className="fixed z-10 inset-0 overflow-y-auto" style={{ marginTop: 50 }}>
+        <div className=" page fixed z-10 inset-0 overflow-y-auto" style={{ marginTop: 50 }}>
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div className="fixed inset-0 transition-opacity" aria-hidden="true">
               <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
@@ -393,44 +526,48 @@ const MahasiswaPage = () => {
                       />
                     </div>
                     <div className="pt-4">
-                      <label htmlFor="dosen_satu" className="font-medium text-gray-700">dosen_satu</label>
-                      <input
-                        id="dosen_satu"
-                        name="dosen_satu"
-                        type="text"
-                        value={newUser.dosen_satu}
-                        onChange={handleChange}
-                        required
-                        className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                        placeholder="dosen_satu"
-                      />
-                    </div>
-                    <div className="pt-4">
-                      <label htmlFor="dosen_dua" className="font-medium text-gray-700">dosen_dua</label>
-                      <input
-                        id="dosen_dua"
-                        name="dosen_dua"
-                        type="text"
-                        value={newUser.dosen_dua}
-                        onChange={handleChange}
-                        required
-                        className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                        placeholder="dosen_dua"
-                      />
-                    </div>
+                    <label htmlFor="dosen_satu" className="font-medium text-gray-700">dosen_satu</label>
+                    <select
+                      id="dosen_satu"
+                      name="dosen_satu"
+                      value={newUser.dosen_satu}
+                      onChange={handleChange}
+                      required
+                      className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    >
+                      <option value="" disabled>Select dosen satu</option>
+                      {dosenData.map(dosen => (
+                        <option key={dosen.id} value={dosen.id}>{dosen.nama}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="pt-4">
+                    <label htmlFor="dosen_dua" className="font-medium text-gray-700">dosen_dua</label>
+                    <select
+                      id="dosen_dua"
+                      name="dosen_dua"
+                      value={newUser.dosen_dua}
+                      onChange={handleChange}
+                      required
+                      className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    >
+                      <option value="" disabled>Select dosen dua</option>
+                      {dosenData.map(dosen => (
+                        <option key={dosen.id} value={dosen.id}>{dosen.nama}</option>
+                      ))}
+                    </select>
+                  </div>
                   </div>
                   <div>
                     <button
                       type="submit"
-                      className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
+                      className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                       Tambah
                     </button>
                     <button
                       type="button"
                       onClick={() => setModalOpen(false)}
-                      className="group relative w-full flex justify-center py-2 px-4 mt-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                    >
+                      className="group relative w-full flex justify-center py-2 px-4 mt-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                       Batal
                     </button>
                   </div>
@@ -442,19 +579,14 @@ const MahasiswaPage = () => {
       )}
 
       {modalUpdate && (
-        <div className="fixed z-10 inset-0 overflow-y-auto">
+        <div className="page fixed z-10 inset-0 overflow-y-auto">
         <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
           <div className="fixed inset-0 transition-opacity" aria-hidden="true">
             <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
           </div>
-          <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+          <span className=" hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
           <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
             <div className="p-6 bg-indigo-100">
-              <div className="bg-cover bg-center h-24 p-4" style={{ backgroundImage: "url('images/login2.jpg')" }}>
-                <div className="flex justify-center">
-                  <img className="h-16 w-16 rounded-full border-2 border-white -mt-8" src="https://via.placeholder.com/100" alt="Profile" />
-                </div>
-              </div>
               <h4>Update Data Dosen</h4>
               {error && <p>Error: {error}</p>}
               <form onSubmit={handleUpdateSubmit}>
@@ -522,8 +654,7 @@ const MahasiswaPage = () => {
                       onChange={handleUpdateChange}
                       required
                       className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                      placeholder="dosen_satu"
-                    />
+                      placeholder="dosen_satu"/>
                   </div>
                   <div className="pt-4">
                     <label htmlFor="dosen_dua" className="font-medium text-gray-700">dosen_dua</label>
@@ -535,22 +666,19 @@ const MahasiswaPage = () => {
                       onChange={handleUpdateChange}
                       required
                       className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                      placeholder="dosen_dua"
-                    />
+                      placeholder="dosen_dua"/>
                   </div>
                 </div>
                 <div>
                   <button
                     type="submit"
-                    className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
+                    className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Perbarui
                   </button>
                   <button
                     type="button"
                     onClick={() => setModalUpdate(false)}
-                    className="group relative w-full flex justify-center py-2 px-4 mt-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
+                    className="group relative w-full flex justify-center py-2 px-4 mt-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                     Batal
                   </button>
                 </div>
@@ -561,6 +689,75 @@ const MahasiswaPage = () => {
         </div>
       </div>
       )}
+
+{modalDetails && (
+  <div className="page fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center z-50">
+  <div className=" bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+    <h2 className="text-xl font-semibold mb-4">Detail Mahasiswa</h2>
+    {selectedDosenSatu && (
+    <div className="mb-4">
+      <p>Dosen Pembimbing 1</p>
+      <p className="text-gray-700"><strong>Nama:</strong> {selectedDosenSatu.nama}</p>
+      <p className="text-gray-700"><strong>NIDN:</strong> {selectedDosenSatu.nidn}</p>
+      <p className="text-gray-700"><strong>Alamat:</strong> {selectedDosenSatu.alamat}</p>
+      <p className="text-gray-700"><strong>Phone:</strong> {selectedDosenSatu.phone}</p>
+    </div>
+    )}
+    {selectedDosenDua && (
+    <div className="mb-4">
+      <p>Dosen Pembimbing 2</p>
+      <p className="text-gray-700"><strong>Nama:</strong> {selectedDosenDua.nama}</p>
+      <p className="text-gray-700"><strong>NIDN:</strong> {selectedDosenDua.nidn}</p>
+      <p className="text-gray-700"><strong>Alamat:</strong> {selectedDosenDua.alamat}</p>
+      <p className="text-gray-700"><strong>Phone:</strong> {selectedDosenDua.phone}</p>
+    </div>
+    )}
+    <div className="flex justify-end">
+    <button
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded "
+          onClick={() => setModalDetails(false)}
+        >
+          Close
+        </button>
+
+    </div>
+  </div>
+</div>
+    //     <div className="fixed inset-0 flex items-center justify-center z-50">
+    //       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+    //         <h2 className="text-xl font-bold mb-4">Data Dosen Pembimbing</h2>
+    //         {selectedDosenSatu && (
+    //           <div className="mb-4">
+    //             <h3 className="text-lg font-semibold">Dosen Satu</h3>
+    //             <p>Nama: {selectedDosenSatu.nama}</p>
+    //             <p>NIDN: {selectedDosenSatu.nidn}</p>
+    //             <p>Alamat: {selectedDosenSatu.alamat}</p>
+    //             <p>Phone: {selectedDosenSatu.phone}</p>
+    //           </div>
+    //         )}
+    //         {selectedDosenDua && (
+    //           <div className="mb-4">
+    //             <h3 className="text-lg font-semibold">Dosen Dua</h3>
+    //             <p>Nama: {selectedDosenDua.nama}</p>
+    //             <p>NIDN: {selectedDosenDua.nidn}</p>
+    //             <p>Alamat: {selectedDosenDua.alamat}</p>
+    //             <p>Phone: {selectedDosenDua.phone}</p>
+    //           </div>
+    //         )}
+    //     <button
+    //       className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+    //       onClick={() => setModalDetails(false)}
+    //     >
+    //       Close
+    //     </button>
+    //   </div>
+    //   <div
+    //     className="fixed inset-0 bg-black opacity-50"
+    //     onClick={() => setModalDetails(false)}
+    //   ></div>
+    // </div>
+   
+    )}
     </div>
   );
 };

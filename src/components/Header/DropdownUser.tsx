@@ -46,7 +46,8 @@ const DropdownUser = () => {
   //       }
 
   //       const result = await response.json();
-  //       setUserData(result.data); // Assuming the data is in result.data
+  //       setUserData(result.data);
+  //       console.log(userData) // Assuming the data is in result.data
   //     } catch (error) {
   //       console.error("Error fetching user data:", error);
   //     } finally {
@@ -55,6 +56,7 @@ const DropdownUser = () => {
   //   };
 
   //   fetchData();
+
   // }, []);
 
   const fetchData = async () => {
@@ -162,7 +164,7 @@ const DropdownUser = () => {
                 My Profile
               </Link>
             </li>
-            <li>
+            {/* <li>
               <Link
                 to="#"
                 className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
@@ -182,7 +184,7 @@ const DropdownUser = () => {
                 </svg>
                 My Contacts
               </Link>
-            </li>
+            </li> */}
             <li>
               <Link
                 to="/settings"

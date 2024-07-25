@@ -65,7 +65,7 @@ const RegisterAdmin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-indigo-500 py-12 px-4 sm:px-6 lg:px-8">
       <div className='page max-w-md w-full p-4'>
       <div className="max-w-md w-full space-y-8">
         <div>

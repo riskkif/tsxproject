@@ -36,7 +36,15 @@ const Settings = () => {
 
     const fetchData = async () => {
       try {
-        const token = sessionStorage.getItem('access_token');
+      const token = sessionStorage.getItem('access_token');
+      if (!token) {
+        Toast.fire({
+          icon: "error",
+          title: "Silahkan login terlebih dahulu"
+        })
+        navigate('/loginadmin');
+        return;
+      }
         const response = await fetch('https://stag-be.bisa.ai/api/app-admin/profile', {
           method: 'GET',
           headers: {
@@ -49,7 +57,7 @@ const Settings = () => {
         }
         
         const result = await response.json();
-        setUserData(result.data); // Assuming the data is in result.data
+        setUserData(result.data);
       } catch (error) {
         console.error("Error fetching user data:", error);
       } finally {

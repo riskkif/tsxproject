@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 
 interface Data {
@@ -10,7 +11,7 @@ interface Data {
   level: number;
 }
 
-const UserPage = () => {
+const AdminPage = () => {
   const [userData, setUserData] = useState<Data[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalUpdate, setModalUpdate] = useState(false);
@@ -18,6 +19,7 @@ const UserPage = () => {
   const [newUser, setNewUser] = useState<Omit<Data, 'id'>>({ nama: '', email: '', level: 1, password: ''   });
   const [error, setError] = useState<string | null>(null);
   const [newUpdateUser, setNewUpdateUser] = useState<Omit<Data, 'id'>>({ nama: '', email: '', level: 1, password: ''  });
+  const navigate = useNavigate()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -49,6 +51,11 @@ const UserPage = () => {
   const fetchData = async () => {
     try {
       const token = sessionStorage.getItem('access_token');
+      if (!token) {
+        showToast('error', 'Silahkan login terlebih dahulu');
+        navigate('/loginadmin');
+        return;
+      }
       const response = await fetch('https://stag-be.bisa.ai/api/app-admin/users?level=1', {
         method: 'GET',
         headers: {
@@ -57,7 +64,7 @@ const UserPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Gagal mengambil data dosen');
+        throw new Error('Gagal mengambil data admin');
       }
 
       const jsonResponse = await response.json();
@@ -311,7 +318,7 @@ const UserPage = () => {
       <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
       <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
         <div className="p-6 bg-indigo-100" >
-          <h1 className="flex align-center font-bold">Tambah User Baru</h1>
+          <h1 className="flex align-center font-bold">Tambah Admin Baru</h1>
           {error && <p>Error: {error}</p>}
           <form className="mt-8 space-y-6" onSubmit={handleFormSubmit}>
             <div className="rounded-md shadow-sm -space-y-px py-4">
@@ -360,7 +367,7 @@ const UserPage = () => {
                 type="submit"
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                Tambah
+                Konfirmasi
               </button>
               <button
                 type="button"
@@ -435,7 +442,7 @@ const UserPage = () => {
                     type="submit"
                     className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
-                    Perbarui
+                    Konfirmasi
                   </button>
                   <button
                     type="button"
@@ -458,4 +465,4 @@ const UserPage = () => {
   );
 };
 
-export default UserPage;
+export default AdminPage;

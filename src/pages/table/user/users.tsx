@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 
@@ -18,6 +19,8 @@ const UserPage = () => {
   const [newUser, setNewUser] = useState<Omit<Data, 'id'>>({ nama: '', email: '', level: 2, password: ''   });
   const [error, setError] = useState<string | null>(null);
   const [newUpdateUser, setNewUpdateUser] = useState<Omit<Data, 'id'>>({ nama: '', email: '', level: 2, password: ''  });
+  const navigate = useNavigate()
+  const token = sessionStorage.getItem('access_token');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -49,6 +52,11 @@ const UserPage = () => {
   const fetchData = async () => {
     try {
       const token = sessionStorage.getItem('access_token');
+      if (!token) {
+        showToast('error', 'Silahkan login terlebih dahulu');
+        navigate('/loginadmin');
+        return;
+      }
       const response = await fetch('https://stag-be.bisa.ai/api/app-admin/users?level=2', {
         method: 'GET',
         headers: {
@@ -178,6 +186,7 @@ const UserPage = () => {
     }
   };
 
+  
   return (
     <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
@@ -187,7 +196,7 @@ const UserPage = () => {
         <span className="flex justify-end">
             <button
             onClick={() => setModalOpen(true)} 
-            className="btn rounded-md bg-indigo-800 hover:bg-indigo-200 px-4 py-2 text-sm font-medium text-black text-white">Tambahkan Dosen</button>
+            className="btn rounded-md bg-indigo-800 hover:bg-indigo-200 px-4 py-2 text-sm font-medium text-black text-white">Tambahkan User</button>
         </span>
       </div>
 

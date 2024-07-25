@@ -26,7 +26,7 @@ const LoginAdmin = () => {
       showConfirmButton: false,
       timer: 3000,
       timerProgressBar: true,
-      didOpen: (toast) => {
+      didOpen: (toast: { onmouseenter: any; onmouseleave: any; }) => {
         toast.onmouseenter = Swal.stopTimer;
         toast.onmouseleave = Swal.resumeTimer;
       }
@@ -71,7 +71,8 @@ const LoginAdmin = () => {
 
   
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-indigo-100 ">
+    // <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-indigo-100 " style={{backgroundImage: "url(https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=4&w=256&h=256&q=60)"}}>
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-indigo-500 " >
       <div className='page max-w-md w-full p-4'>
     <div className="max-w-md w-full space-y-8 ">
       <div>

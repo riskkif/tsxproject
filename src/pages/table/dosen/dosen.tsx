@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 interface Data {
@@ -9,6 +10,23 @@ interface Data {
   alamat: string;
 }
 
+interface Mahasiswa {
+  id: number;
+  nama: string;
+  nim: string;
+  phone: string;
+  alamat: string;
+}
+
+interface Dosen {
+  id: number;
+  nama: string;
+  nidn: string;
+  phone: string;
+  alamat: string;
+  mahasiswa: Mahasiswa[];
+}
+
 const DosenPage = () => {
   const [userData, setUserData] = useState<Data[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -17,6 +35,9 @@ const DosenPage = () => {
   const [newUser, setNewUser] = useState<Omit<Data, 'id'>>({ nama: '', nidn: '', phone: '', alamat: '' });
   const [error, setError] = useState<string | null>(null);
   const [newUpdateUser, setNewUpdateUser] = useState<Omit<Data, 'id'>>({ nama: '', nidn: '', phone: '', alamat: '' });
+  const [selectedDosen, setSelectedDosen] = useState<Dosen | null>(null);
+  const [modalDetails, setModalDetails] = useState<boolean>(false);
+  const navigate = useNavigate()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -46,8 +67,13 @@ const DosenPage = () => {
   };
 
   const fetchData = async () => {
+    const token = sessionStorage.getItem('access_token');
     try {
-      const token = sessionStorage.getItem('access_token');
+      if (!token) {
+        showToast('error', 'Silahkan login terlebih dahulu');
+        navigate('/loginadmin');
+        return;
+      }
       const response = await fetch('https://stag-be.bisa.ai/api/app-admin/dosens', {
         method: 'GET',
         headers: {
@@ -109,6 +135,37 @@ const DosenPage = () => {
     setModalUpdate(true);
   };
 
+  const getMahasiswa = async (id: number): Promise<Dosen | null> => {
+    try {
+      const token = sessionStorage.getItem('access_token');
+      const response = await fetch(`https://stag-be.bisa.ai/api/app-admin/dosen/${id}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const jsonResponse = await response.json();
+      const data: Dosen = jsonResponse.data;
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.error('Error fetching dosen:', error);
+      return null;
+    }
+  };
+
+  const handleDetails = async (id: number) => {
+    const dosenData = await getMahasiswa(id);
+    setSelectedDosen(dosenData);
+    setModalDetails(true);
+  };
+
+
   const deleteUser = async (id: number) => {
     try {
       const token = sessionStorage.getItem('access_token');
@@ -157,16 +214,16 @@ const DosenPage = () => {
       });
   
       if (!response.ok) {
-        showToast('error', 'Perbarui profil gagal!');
+        showToast('error', 'Perbarui dosen gagal!');
         return;
       }
   
       fetchData();
       setModalUpdate(false);
-      showToast('success', 'Perbarui profil berhasil!');
+      showToast('success', 'Perbarui dosen berhasil!');
     } catch (error) {
       console.error('Error updating user:', error);
-      showToast('error', 'Perbarui profil gagal!');
+      showToast('error', 'Perbarui dosen gagal!');
     }
   };
   
@@ -247,7 +304,8 @@ const DosenPage = () => {
             </div>
             <div className="col-span-2 flex items-center">
               <div className="flex items-center space-x-5">
-              <button className="hover:text-primary">
+              <button className="hover:text-primary"
+                      onClick={() => handleDetails(data.id)}>
                       <svg
                         className="fill-current"
                         width="18"
@@ -323,7 +381,7 @@ const DosenPage = () => {
       </div>
 
       {modalOpen && (
-        <div className="fixed z-10 inset-0 overflow-y-auto" style={{ marginTop: 50 }}>
+        <div className=" page fixed z-10 inset-0 overflow-y-auto" style={{ marginTop: 50 }}>
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div className="fixed inset-0 transition-opacity" aria-hidden="true">
               <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
@@ -393,7 +451,7 @@ const DosenPage = () => {
                       type="submit"
                       className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
-                      Tambah
+                      Konfirmasi
                     </button>
                     <button
                       type="button"
@@ -411,7 +469,7 @@ const DosenPage = () => {
       )}
 
       {modalUpdate && (
-        <div className="fixed z-10 inset-0 overflow-y-auto">
+        <div className="page fixed z-10 inset-0 overflow-y-auto">
         <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
           <div className="fixed inset-0 transition-opacity" aria-hidden="true">
             <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
@@ -487,7 +545,7 @@ const DosenPage = () => {
                     type="submit"
                     className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
-                    Perbarui
+                    Konfirmasi
                   </button>
                   <button
                     type="button"
@@ -503,6 +561,51 @@ const DosenPage = () => {
           </div>
         </div>
       </div>
+      )}
+
+{modalDetails && selectedDosen && (
+        <div className="page fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center z-50">
+        <div className="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full">
+          <h2 className="text-xl font-semibold mb-4">Detail Dosen</h2>
+            <div className="mb-4">
+              {selectedDosen.mahasiswa && selectedDosen.mahasiswa.length > 0 ? (
+                  <table className="table-auto w-full">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-2 font-medium">No</th>
+                        <th className="px-4 py-2 font-medium">Nama</th>
+                        <th className="px-4 py-2 font-medium">NIM</th>
+                        <th className="px-4 py-2 font-medium">Alamat</th>
+                        <th className="px-4 py-2 font-medium">Telepon</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedDosen.mahasiswa.map((student, index) => (
+                        <tr key={student.id}>
+                          <td className="border px-4 py-2">{index + 1}</td>
+                          <td className="border px-4 py-2">{student.nama}</td>
+                          <td className="border px-4 py-2">{student.nim}</td>
+                          <td className="border px-4 py-2">{student.alamat}</td>
+                          <td className="border px-4 py-2">{student.phone}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="text-gray-700">Tidak ada mahasiswa</p>
+                )}
+            </div>
+            <div className="flex justify-end">
+              <button
+                    className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-300"
+                    onClick={() => setModalDetails(false)}
+                  >
+                    Close
+                  </button>
+
+              </div>
+          </div>
+          </div>
       )}
     </div>
   );
