@@ -2,10 +2,10 @@
 
 
 # Build the Docker image
-docker build -t admin:1.0 .
+docker build -t admintsxproject:1.0 .
 
 # Remove any existing container named 
-docker rm -f admin || true
+docker rm -f admintsxproject || true
 
 # Run the Docker container with specified options
-docker run --name=admin --hostname=admin --volume=/root/admin:/admin --workdir=/admin -p 5137:5137 --restart=no --runtime=runc admin:1.0 npm run dev --host=0.0.0.0 --reload
+docker run --name=admintsxproject --hostname=admintsxproject --volume=/root/admintsxproject:/admintsxproject --workdir=/admintsxproject -p 5137:5137 --restart=no --runtime=runc admintsxproject:1.0 npm run dev --host=0.0.0.0 --reload
