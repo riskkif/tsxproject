@@ -121,7 +121,7 @@ const LoginAdmin = () => {
           >
             Login
           </button>
-          <p className="mt-2 text-sm text-gray-600 text-center">Belum punya akun? <Link to="/registeradmin" className='text-indigo-600 font-medium'>Daftar</Link></p>
+          <p className="mt-2 text-sm text-gray-600 text-center">Belum punya akun? <Link to="/" className='text-indigo-600 font-medium'>Daftar</Link></p>
         </div>
       </form>
     </div>
